@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>바이브 카페 - 주문서</title>
+    <title>숭실대 카페 - 주문서</title>
     <!-- Pretendard 웹폰트 연결 (KRDS 표준 서체) -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <!-- CSS 스타일시트 연결 -->
@@ -18,7 +18,7 @@
             <!-- 카페 로고 (이모지) -->
             <div class="logo">☕</div>
             <!-- 카페 이름 -->
-            <h1>바이브 카페</h1>
+            <h1>숭실대 카페</h1>
             <!-- 부제 -->
             <p class="subtitle">당신의 하루에 바이브를 더하다</p>
         </header>
@@ -53,12 +53,18 @@
                     <label for="drinkSelect">음료 선택 <span class="required">*</span></label>
                     <select id="drinkSelect" name="drinkSelect">
                         <option value="" data-price="0">-- 음료를 선택하세요 --</option>
-                        <option value="americano" data-price="3500">아메리카노 (3,500원)</option>
-                        <option value="latte" data-price="4000">카페라떼 (4,000원)</option>
-                        <option value="mocha" data-price="4500">카페모카 (4,500원)</option>
-                        <option value="vanilla-latte" data-price="4500">바닐라라떼 (4,500원)</option>
-                        <option value="green-tea-latte" data-price="4500">녹차라떼 (4,500원)</option>
+                        <option value="americano" data-price="3500">숭실대 아메리카노 (3,500원)</option>
+                        <option value="latte" data-price="4000">숭실대 카페라떼 (4,000원)</option>
+                        <option value="mocha" data-price="4500">숭실대 카페모카 (4,500원)</option>
+                        <option value="vanilla-latte" data-price="4500">숭실대 바닐라라떼 (4,500원)</option>
+                        <option value="green-tea-latte" data-price="4500">숭실대 녹차라떼 (4,500원)</option>
                     </select>
+                </div>
+
+                <!-- [선택된 음료 고화질 이미지 미리보기] -->
+                <div id="drinkImageContainer" class="drink-image-container hidden">
+                    <img id="drinkImage" src="" alt="선택된 음료 이미지" class="drink-image">
+                    <div id="drinkImageCaption" class="drink-image-caption"></div>
                 </div>
 
                 <!-- 4. 사이즈 선택 (라디오 버튼 - 하나만 선택 가능) -->

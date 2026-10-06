@@ -1,5 +1,5 @@
 // ===================================================
-// 바이브 카페 (Vibe Cafe) 주문 페이지 자바스크립트
+// 바이브 카페 (숭실대 카페) 주문 페이지 자바스크립트
 // - 초보자를 위한 상세 주석 포함
 // ===================================================
 
@@ -12,6 +12,30 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) 
     ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) 
     : null;
+
+// [음료별 고화질 대표 이미지 매핑]
+const DRINK_IMAGES = {
+    'americano': {
+        name: '숭실대 아메리카노',
+        url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=1000&q=85'
+    },
+    'latte': {
+        name: '숭실대 카페라떼',
+        url: 'https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?auto=format&fit=crop&w=1000&q=85'
+    },
+    'mocha': {
+        name: '숭실대 카페모카',
+        url: 'https://images.unsplash.com/photo-1578314675249-a6910f80cc4e?auto=format&fit=crop&w=1000&q=85'
+    },
+    'vanilla-latte': {
+        name: '숭실대 바닐라라떼',
+        url: 'https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=1000&q=85'
+    },
+    'green-tea-latte': {
+        name: '숭실대 녹차라떼',
+        url: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=1000&q=85'
+    }
+};
 
 // 1. 주문 데이터 관리 변수 (로컬 화면용)
 let orders = []; // 접수된 주문 객체들을 보관하는 배열
@@ -36,6 +60,11 @@ const totalPriceSpan = document.getElementById('totalPrice');
 const submitBtn = document.getElementById('submitBtn'); // 주문하기 버튼
 const resetBtn = document.getElementById('resetBtn'); // 다시 작성 버튼
 const orderConfirmation = document.getElementById('orderConfirmation'); // 주문 확인 메시지 영역
+
+// [음료 이미지 미리보기 요소]
+const drinkImageContainer = document.getElementById('drinkImageContainer');
+const drinkImage = document.getElementById('drinkImage');
+const drinkImageCaption = document.getElementById('drinkImageCaption');
 
 // [주문 내역 탭 요소]
 const ordersList = document.getElementById('ordersList');
@@ -68,12 +97,34 @@ tabOrderBtn.addEventListener('click', () => switchTab('order'));
 tabHistoryBtn.addEventListener('click', () => switchTab('history'));
 
 /**
- * 4. 예상 금액을 계산하는 함수 (calculateTotal)
+ * 4. 선택된 음료의 고화질 이미지를 갱신하는 함수
+ */
+function updateDrinkImage() {
+    const selectedValue = drinkSelect.value;
+    const item = DRINK_IMAGES[selectedValue];
+
+    if (item) {
+        drinkImage.src = item.url;
+        drinkImage.alt = item.name;
+        drinkImageCaption.textContent = item.name;
+        drinkImageContainer.classList.remove('hidden');
+    } else {
+        drinkImageContainer.classList.add('hidden');
+        drinkImage.src = '';
+        drinkImageCaption.textContent = '';
+    }
+}
+
+/**
+ * 5. 예상 금액을 계산하는 함수 (calculateTotal)
  * - 음료, 사이즈, 추가 옵션, 수량을 바탕으로 총 금액을 계산하고 화면에 표시합니다.
  * - @returns {number} 계산된 최종 금액
  */
 function calculateTotal() {
-    // 4-1. 선택된 음료 확인
+    // 5-1. 선택된 음료 이미지 갱신
+    updateDrinkImage();
+
+    // 5-2. 선택된 음료 가격 확인
     const selectedDrinkOption = drinkSelect.options[drinkSelect.selectedIndex];
     if (!selectedDrinkOption) {
         totalPriceSpan.textContent = '0원';
@@ -87,30 +138,30 @@ function calculateTotal() {
         return 0;
     }
 
-    // 4-2. 선택된 사이즈 가격 확인 (라디오 버튼)
+    // 5-3. 선택된 사이즈 가격 확인 (라디오 버튼)
     const selectedSizeRadio = document.querySelector('input[name="drinkSize"]:checked');
     const sizePrice = selectedSizeRadio ? (Number(selectedSizeRadio.dataset.price) || 0) : 0;
 
-    // 4-3. 체크된 추가 옵션들의 가격 합산
+    // 5-4. 체크된 추가 옵션들의 가격 합산
     const checkedOptionBoxes = document.querySelectorAll('input[name="options"]:checked');
     let optionsPrice = 0;
     checkedOptionBoxes.forEach((checkbox) => {
         optionsPrice += Number(checkbox.dataset.price) || 0;
     });
 
-    // 4-4. 수량 확인
+    // 5-5. 수량 확인
     let quantity = parseInt(quantityInput.value, 10);
     if (isNaN(quantity) || quantity < 1) {
         quantity = 1;
     }
 
-    // 4-5. 1잔 가격 = 기본음료 + 사이즈추가 + 옵션추가
+    // 5-6. 1잔 가격 = 기본음료 + 사이즈추가 + 옵션추가
     const singleCupPrice = drinkPrice + sizePrice + optionsPrice;
 
-    // 4-6. 총 금액 = 1잔 가격 * 수량
+    // 5-7. 총 금액 = 1잔 가격 * 수량
     const finalTotal = singleCupPrice * quantity;
 
-    // 4-7. 천 단위 콤마(,) 표시 (예: 5000 -> 5,000원)
+    // 5-8. 천 단위 콤마(,) 표시 (예: 5000 -> 5,000원)
     totalPriceSpan.textContent = `${finalTotal.toLocaleString()}원`;
 
     return finalTotal;
@@ -121,15 +172,15 @@ orderForm.addEventListener('change', calculateTotal);
 orderForm.addEventListener('input', calculateTotal);
 
 /**
- * 5. 주문 내역 목록을 화면에 그리는 함수 (renderOrders)
+ * 6. 주문 내역 목록을 화면에 그리는 함수 (renderOrders)
  * - orders 배열의 데이터를 바탕으로 주문 카드를 생성하고 요약을 갱신합니다.
  * - 보안을 위해 사용자 입력 텍스트는 innerHTML 대신 textContent로 안전하게 삽입합니다.
  */
 function renderOrders() {
-    // 5-1. 주문 건수 배지 갱신
+    // 6-1. 주문 건수 배지 갱신
     orderCountBadge.textContent = orders.length;
 
-    // 5-2. 주문 내역이 없을 때의 처리
+    // 6-2. 주문 내역이 없을 때의 처리
     if (orders.length === 0) {
         ordersList.innerHTML = ''; // 목록 비우기
         emptyOrdersMessage.classList.remove('hidden'); // '주문 내역 없음' 안내 표시
@@ -137,7 +188,7 @@ function renderOrders() {
         return;
     }
 
-    // 5-3. 주문 내역이 있을 때의 처리
+    // 6-3. 주문 내역이 있을 때의 처리
     emptyOrdersMessage.classList.add('hidden');
     historyFooter.classList.remove('hidden');
     ordersList.innerHTML = ''; // 이전 목록 초기화 후 새로 그리기
@@ -180,7 +231,7 @@ function renderOrders() {
         cardTop.appendChild(cancelBtn);
         card.appendChild(cardTop);
 
-        // 2) 2줄 텍스트: "카페라떼 M사이즈 (샷 추가) 1잔"
+        // 2) 2줄 텍스트: "숭실대 카페라떼 M사이즈 (샷 추가) 1잔"
         const detailsDiv = document.createElement('div');
         detailsDiv.className = 'order-card-details';
         detailsDiv.textContent = `${order.drinkName} ${order.size}사이즈${order.optionText} ${order.quantity}잔`;
@@ -200,12 +251,12 @@ function renderOrders() {
         ordersList.appendChild(card);
     });
 
-    // 5-4. 하단 요약 텍스트 갱신 (예: "총 주문 금액: 15,000원 (3건)")
+    // 6-4. 하단 요약 텍스트 갱신 (예: "총 주문 금액: 15,000원 (3건)")
     totalOrdersSummary.textContent = `총 주문 금액: ${totalRevenue.toLocaleString()}원 (${orders.length}건)`;
 }
 
 /**
- * 6. "내역 모두 지우기" 버튼 클릭 이벤트
+ * 7. "내역 모두 지우기" 버튼 클릭 이벤트
  */
 clearOrdersBtn.addEventListener('click', () => {
     if (orders.length === 0) return;
@@ -216,12 +267,12 @@ clearOrdersBtn.addEventListener('click', () => {
 });
 
 /**
- * 7. 주문하기 버튼 클릭 시 Supabase DB(cafe_menu03)에 저장 및 화면 처리
+ * 8. 주문하기 버튼 클릭 시 Supabase DB(cafe_menu03)에 저장 및 화면 처리
  */
 orderForm.addEventListener('submit', async function (event) {
     event.preventDefault(); // 폼 기본 새로고침 방지
 
-    // 7-1. 유효성 검사 (이름 & 음료)
+    // 8-1. 유효성 검사 (이름 & 음료)
     const userName = userNameInput.value.trim();
     if (userName === '') {
         alert('이름을 입력해주세요');
@@ -237,7 +288,7 @@ orderForm.addEventListener('submit', async function (event) {
 
     const userPhone = userPhoneInput.value.trim();
 
-    // 7-2. 주문 데이터 가공
+    // 8-2. 주문 데이터 가공
     // 음료 이름 및 기본 가격
     const selectedDrinkOption = drinkSelect.options[drinkSelect.selectedIndex];
     const rawDrinkText = selectedDrinkOption.textContent;
@@ -270,13 +321,13 @@ orderForm.addEventListener('submit', async function (event) {
     const total = calculateTotal();
     const formattedTotal = total.toLocaleString();
 
-    // 7-3. 중복 클릭 방지 (저장 작업 중 주문하기 버튼 비활성화)
+    // 8-3. 중복 클릭 방지 (저장 작업 중 주문하기 버튼 비활성화)
     submitBtn.disabled = true;
     const originalBtnText = submitBtn.textContent;
     submitBtn.textContent = '주문 처리 중...';
 
     try {
-        // 7-4. Supabase DB의 cafe_menu03 테이블에 주문 저장
+        // 8-4. Supabase DB의 cafe_menu03 테이블에 주문 저장
         if (supabaseClient) {
             const { data, error } = await supabaseClient
                 .from('cafe_menu03')
@@ -302,7 +353,7 @@ orderForm.addEventListener('submit', async function (event) {
             console.warn('ℹ️ SUPABASE_URL과 SUPABASE_KEY를 입력하시면 cafe_menu03 테이블에 자동 저장됩니다.');
         }
 
-        // 7-5. 저장 성공 시 로컬 주문 내역에 추가
+        // 8-5. 저장 성공 시 로컬 주문 내역에 추가
         const now = new Date();
         const orderTime = now.toLocaleTimeString('ko-KR', {
             hour: '2-digit',
@@ -325,7 +376,7 @@ orderForm.addEventListener('submit', async function (event) {
         orders.unshift(newOrder);
         renderOrders();
 
-        // 7-6. 저장 성공 시 기존 주문 완료 확인 메시지 표시
+        // 8-6. 저장 성공 시 기존 주문 완료 확인 메시지 표시
         const orderSummaryMessage = `${userName}님, ${drinkName} ${sizeName}사이즈${optionText} ${quantity}잔, 총 ${formattedTotal}원 주문이 접수되었습니다!`;
         orderConfirmation.textContent = orderSummaryMessage;
         orderConfirmation.classList.remove('hidden');
@@ -334,18 +385,18 @@ orderForm.addEventListener('submit', async function (event) {
         orderConfirmation.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
     } catch (error) {
-        // 7-7. 저장 실패 시 알림창 및 콘솔에 에러 출력
+        // 8-7. 저장 실패 시 알림창 및 콘솔에 에러 출력
         alert('주문 저장에 실패했어요');
         console.error('주문 저장 에러:', error);
     } finally {
-        // 7-8. 작업 완료 후 주문하기 버튼 상태 복구
+        // 8-8. 작업 완료 후 주문하기 버튼 상태 복구
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
     }
 });
 
 /**
- * 8. 다시 작성 버튼 클릭 (주문서 초기화)
+ * 9. 다시 작성 버튼 클릭 (주문서 초기화)
  * - 주문서 입력 필드만 초기화하며, 이미 접수된 orders 내역은 유지됩니다.
  */
 orderForm.addEventListener('reset', function () {
@@ -359,6 +410,9 @@ orderForm.addEventListener('reset', function () {
         // 수량 1로 복구
         quantityInput.value = '1';
 
+        // 이미지 미리보기 숨기기
+        updateDrinkImage();
+
         // 확인 메시지 숨기기
         orderConfirmation.classList.add('hidden');
         orderConfirmation.textContent = '';
@@ -368,6 +422,6 @@ orderForm.addEventListener('reset', function () {
     }, 0);
 });
 
-// 9. 페이지 초기 로드 시 실행
-calculateTotal(); // 예상 금액 0원 초기화
+// 10. 페이지 초기 로드 시 실행
+calculateTotal(); // 예상 금액 0원 및 초기 이미지 설정
 renderOrders(); // 주문 내역 빈 상태 초기화 (배지 0건 및 안내 문구 표시)
